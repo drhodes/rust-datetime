@@ -1,0 +1,22 @@
+#[link(
+    name = "datetime",
+    vers = "0.01",
+    uuid = "d056bd5e-d1da-11e1-af5e-5f7a5e87bb2e"
+)];
+
+#[crate_type = "lib"];
+
+#[path = "./datetime.rs"]
+mod datetime;
+
+#[path = "./timezone.rs"]
+mod timezone;
+
+#[path = "./gdatetime.rs"]
+mod gdatetime;
+
+#[path = "tests/date_test.rs"]
+mod test;
+
+#[path = "tests/api_test.rs"]
+mod test;
