@@ -1,36 +1,21 @@
 // Copyright 2012 Derek A. Rhodes. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
- 
-/*
-* Copyright (C) 2009-2010 Christian Hergert <chris@dronelabs.com>
-* Copyright © 2010 Codethink Limited
-*
-* This library is free software; you can redistribute it and/or modify
-* it under the terms of the GNU Lesser General Public License as
-* published by the Free Software Foundation; either version 2.1 of the
-* licence, or (at your option) any later version.
-*
-* This is distributed in the hope that it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public
-* License for more details.
-*
-* You should have received a copy of the GNU Lesser General Public
-* License along with this library; if not, write to the Free Software
-* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
-* USA.
-*
-* Authors: Christian Hergert <chris@dronelabs.com>
-* Thiago Santos <thiago.sousa.santos@collabora.co.uk>
-* Emmanuele Bassi <ebassi@linux.intel.com>
-* Ryan Lortie <desrt@desrt.ca>
-*/
 
- 
-use std;
+// This library is free software; you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// licence, or (at your option) any later version.
+
+// This library is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+// USA.
+
 import libc::*;
-import io;
 import str::unsafe;
 import result::{result, ok, err};
 
@@ -41,8 +26,6 @@ const G_TIME_SPAN_MINUTE: i64 = 60000000;
 const G_TIME_SPAN_SECOND: i64 = 1000000;
 const G_TIME_SPAN_MILLISECOND: i64 = 1000;
 
-type GTimeSpan = i64;
-
 type GDateWeekday = u8;
 type GDateDay = u8;
 type GDateMonth = u8;
@@ -52,7 +35,7 @@ type GTime = i32;
 enum GDateTime{}
 enum GDate{}
 enum GTimeZone{}
-enum GTimeVal{}
+//enum GTimeVal{}
 type GTimeType = c_uint;
 
 #[link_name = "glib-2.0"]
@@ -80,8 +63,8 @@ extern mod c {
     fn g_date_time_new_from_unix_local (t: i64) -> *GDateTime;
     fn g_date_time_new_from_unix_utc (t: i64) -> *GDateTime;
 
-    fn g_date_time_new_from_timeval_local ( tv: *GTimeVal) -> *GDateTime;
-    fn g_date_time_new_from_timeval_utc ( tv: *GTimeVal) -> *GDateTime;
+    //fn g_date_time_new_from_timeval_local ( tv: *GTimeVal) -> *GDateTime;
+    //fn g_date_time_new_from_timeval_utc ( tv: *GTimeVal) -> *GDateTime;
     
     fn g_date_time_new (tz: *GTimeZone, year: c_int, month: c_int, day: c_int, 
                         hour: c_int, minute: c_int, seconds: c_double) -> *GDateTime;
@@ -92,22 +75,24 @@ extern mod c {
 
     fn g_date_time_add_minutes(datetime: *GDateTime, minutes: c_int) -> *GDateTime;
     fn g_date_time_add_months(datetime: *GDateTime, months: c_int) -> *GDateTime;
-    fn g_date_time_add_seconds(datetime: *GDateTime, seconds: c_int) -> *GDateTime;
+    fn g_date_time_add_seconds(datetime: *GDateTime, seconds: c_double) -> *GDateTime;
     fn g_date_time_add_weeks(datetime: *GDateTime, weeks: c_int) -> *GDateTime;
     fn g_date_time_add_years(datetime: *GDateTime, years: c_int) -> *GDateTime;
     
     fn g_date_time_add_days (datetime: *GDateTime, days: c_int) -> *GDateTime;
     fn g_date_time_add_hours (datetime: *GDateTime, hours: c_int) -> *GDateTime;
-    fn g_date_time_add (datetime: *GDateTime, timespan: GTimeSpan ) -> *GDateTime;
+    //fn g_date_time_add (datetime: *GDateTime, timespan: GTimeSpan ) -> *GDateTime;
     fn g_date_time_add_full (datetime: *GDateTime, years: c_int, 
                              months: c_int, days: c_int, hours: c_int,
                              minutes: c_int, seconds: c_double) -> *GDateTime;
     
     //: c_int g_date_time_compare (gconstpointer dt1, // gconstpointer dt2);
     // GTimeSpan g_date_time_difference (GDateTime *end, // GDateTime *begin);
-    // guint g_date_time_hash (gconstpointer datetime);
-    // gboolean g_date_time_equal (gconstpointer dt1, // gconstpointer dt2);
+    fn g_date_time_hash (dt: *GDateTime) -> c_uint;
     // void g_date_time_get_ymd (GDateTime *datetime, //: c_int *year, //: c_int *month, //: c_int *day);
+
+    fn g_date_time_equal(dt1: *GDateTime, dt2: *GDateTime) -> bool;
+
     
     fn g_date_time_get_year (datetime: *GDateTime) -> c_int;
     fn g_date_time_get_month (datetime: *GDateTime) -> c_int;
@@ -125,7 +110,7 @@ extern mod c {
     fn g_date_time_get_seconds (datetime: *GDateTime) -> c_double;
 
     fn g_date_time_to_unix (datetime: *GDateTime) -> i64;
-    fn g_date_time_to_timeval (datetime: *GDateTime, tv: *GTimeVal) -> bool;
+    //fn g_date_time_to_timeval (datetime: *GDateTime, tv: *GTimeVal) -> bool;
 
     fn g_date_time_get_utc_offset (datetime: *GDateTime) -> GTimeSpan;
     fn g_date_time_get_timezone_abbreviation (datetime: *GDateTime) -> *c_char;
@@ -138,9 +123,13 @@ extern mod c {
     fn g_date_time_format (datetime: *GDateTime, format: *c_char) -> *c_char;
 }
 
-fn format_datetime(datetime: *GDateTime, format: ~str) -> ~str {
+fn format_datetime(datetime: *GDateTime, format: ~str) -> result<~str, ~str> {
     let fmtd = str::as_c_str(format, {|x| c::g_date_time_format(datetime, x)});
     unsafe {
-        unsafe::from_c_str(fmtd)
+        if fmtd == ptr::null() {
+            err(~"bad format string: " + format)
+        } else {
+            ok(unsafe::from_c_str(fmtd))
+        }
     }    
 }
