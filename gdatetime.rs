@@ -26,7 +26,6 @@
 * Emmanuele Bassi <ebassi@linux.intel.com>
 * Ryan Lortie <desrt@desrt.ca>
 */
-
  
 use std;
 import libc::*;
@@ -92,7 +91,7 @@ extern mod c {
 
     fn g_date_time_add_minutes(datetime: *GDateTime, minutes: c_int) -> *GDateTime;
     fn g_date_time_add_months(datetime: *GDateTime, months: c_int) -> *GDateTime;
-    fn g_date_time_add_seconds(datetime: *GDateTime, seconds: c_int) -> *GDateTime;
+    fn g_date_time_add_seconds(datetime: *GDateTime, seconds: c_double) -> *GDateTime;
     fn g_date_time_add_weeks(datetime: *GDateTime, weeks: c_int) -> *GDateTime;
     fn g_date_time_add_years(datetime: *GDateTime, years: c_int) -> *GDateTime;
     
@@ -105,9 +104,11 @@ extern mod c {
     
     //: c_int g_date_time_compare (gconstpointer dt1, // gconstpointer dt2);
     // GTimeSpan g_date_time_difference (GDateTime *end, // GDateTime *begin);
-    // guint g_date_time_hash (gconstpointer datetime);
-    // gboolean g_date_time_equal (gconstpointer dt1, // gconstpointer dt2);
+    fn g_date_time_hash (dt: *GDateTime) -> c_uint;
     // void g_date_time_get_ymd (GDateTime *datetime, //: c_int *year, //: c_int *month, //: c_int *day);
+
+    fn g_date_time_equal(dt1: *GDateTime, dt2: *GDateTime) -> bool;
+
     
     fn g_date_time_get_year (datetime: *GDateTime) -> c_int;
     fn g_date_time_get_month (datetime: *GDateTime) -> c_int;
@@ -138,9 +139,13 @@ extern mod c {
     fn g_date_time_format (datetime: *GDateTime, format: *c_char) -> *c_char;
 }
 
-fn format_datetime(datetime: *GDateTime, format: ~str) -> ~str {
+fn format_datetime(datetime: *GDateTime, format: ~str) -> result<~str, ~str> {
     let fmtd = str::as_c_str(format, {|x| c::g_date_time_format(datetime, x)});
     unsafe {
-        unsafe::from_c_str(fmtd)
+        if fmtd == ptr::null() {
+            err(~"bad format string: " + format)
+        } else {
+            ok(unsafe::from_c_str(fmtd))
+        }
     }    
 }
