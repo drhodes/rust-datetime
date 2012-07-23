@@ -21,7 +21,7 @@ fn timezone_new(id: ~str) -> result<timezone, ~str> {
     if tz == ptr::null() {
         ok(timezone(tz))
     } else {
-        err(~"Received unknown timezone string: " + id)
+        err(~"Received invalid timezone string: " + id)
     }
 }
 
