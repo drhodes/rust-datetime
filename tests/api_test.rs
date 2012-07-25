@@ -48,31 +48,3 @@ fn test_clone() {
          temp = temp.clone();
      }
 }
-
-#[test]
-fn test_adders() {
-    let t = new_from_unix_utc(0);
-    assert t.format(~"%c") == ok(~"Thu Jan  1 00:00:00 1970");
-    assert t.equal(t) == true;
-    assert t.equal(t.add_years(1)) == false;
-    assert t.equal(t.add_seconds(0.001 as f64)) == false;
-    assert t.add_seconds(86400 as f64).equal(t.add_days(1));
-
-}
-
-
-fn id(dt: datetime) -> datetime {    
-    dt.clone()
-}
-
-#[test]
-fn test_clone() {
-    let mut temp = new_from_unix_utc(0);
-    assert temp.format(~"%F") == temp.clone().format(~"%F");
-
-    let mut count = 0;
-    while count < 100 {
-        temp = temp.clone();
-        count += 1
-    }       
-}
