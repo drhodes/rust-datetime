@@ -15,8 +15,9 @@ mod timezone;
 #[path = "./gdatetime.rs"]
 mod gdatetime;
 
+
 #[path = "tests/date_test.rs"]
-mod test;
+mod test1;
 
 #[path = "tests/api_test.rs"]
-mod test;
+mod test2;

@@ -1,4 +1,3 @@
-use std;
 import datetime::*;
 import timezone::*;
 
@@ -12,11 +11,11 @@ import timezone::*;
 
 #[test]
 fn test_adders() {
-    alt new_from_unix_utc(0) {
-      err(s) {
-        fail(s);
+    match new_from_unix_utc(0) {
+      err(s) => {
+        fail(s)
       }
-      ok(t) {
+      ok(t) => {
         assert t.format(~"%c") == ok(~"Thu Jan  1 00:00:00 1970");
         assert t.equal(t) == true;
         assert t.equal(t.add_years(1)) == false;
@@ -33,18 +32,18 @@ fn id(dt: datetime) -> datetime {
 #[test]
 fn test_clone() {
     let mut temp: datetime;
-    alt new_from_unix_utc(0) {
-      err(s) {
+    match new_from_unix_utc(0) {
+      err(s) => {
         fail(s)
-      }
+        }
       
-      ok(t) {
+      ok(t) => {
         temp = t.clone();
         assert temp.format(~"%F") == temp.clone().format(~"%F");
       }
     }
     
-     for 100.times {
-         temp = temp.clone();
-     }
+    for 100.times {
+        temp = temp.clone();
+    }
 }
