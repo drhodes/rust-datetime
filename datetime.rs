@@ -37,18 +37,18 @@ import timezone::timezone;
 /// given time zone tz. The time is as accurate as the system allows
 /// to a maximum accuracy of 1 microsecond.
 fn new_now(tz: timezone::timezone) -> datetime {
-    datetime(c::g_date_time_new_now(tz.cref))
+    return datetime(c::g_date_time_new_now(tz.cref));
 }
 
 /// Creates a GDateTime corresponding to this exact instant in the
 /// local time zone.
 fn new_now_local() -> datetime {
-    datetime(c::g_date_time_new_now_local())
+    return datetime(c::g_date_time_new_now_local());
 }
 
 /// Creates a GDateTime corresponding to this exact instant in UTC.
 fn new_now_utc() -> datetime {
-    datetime(c::g_date_time_new_now_utc())
+    return datetime(c::g_date_time_new_now_utc());
 }
 
 /// Creates a datetime corresponding to the given Unix time t in
@@ -61,9 +61,9 @@ fn new_from_unix_local(t: i64) -> result<datetime, ~str> {
     if gdt == ptr::null() {
         let msg = ~"error in datetime::new_from_unix_local, \
                     time outside supported range: ";
-        err(msg + i64::to_str(t, 10))
+        return err(msg + i64::to_str(t, 10));
     } else {
-        ok(datetime(gdt))
+        return ok(datetime(gdt));
     }        
 }
 
@@ -108,41 +108,41 @@ fn new_from_unix_utc(t: i64) -> result<datetime, ~str> {
 /// in the time zone tz
 fn new_datetime(tz: timezone, year: int, month: int, day: int, 
                 hour: int, minute: int, seconds: f32) -> datetime{
-    datetime(c::g_date_time_new(
+    return datetime(c::g_date_time_new(
         tz.cref, 
         year as c_int, 
         month as c_int,
         day as c_int,
         hour as c_int, 
         minute as c_int,
-        seconds as c_double))
+        seconds as c_double));
 }
 
 /// Creates a new datetime corresponding to the given
 /// date and time in the local time zone.
 fn new_datetime_local(year: int, month: int, day: int, 
                       hour: int, minute: int, seconds: f32) -> datetime {
-    datetime(c::g_date_time_new_local(year as c_int, 
-                                      month as c_int,
-                                      day as c_int,
-                                      hour as c_int, 
-                                      minute as c_int,
-                                      seconds as c_double))
+    return datetime(c::g_date_time_new_local(year as c_int, 
+                                             month as c_int,
+                                             day as c_int,
+                                             hour as c_int, 
+                                             minute as c_int,
+                                             seconds as c_double));
 }
 
 /// Creates a new datetime corresponding to the given date and time in UTC.
 fn new_datetime_utc(year: int, month: int, day: int, 
                 hour: int, minute: int, seconds: f32) -> datetime{
-    datetime(c::g_date_time_new_utc(
+    return datetime(c::g_date_time_new_utc(
         year as c_int, 
         month as c_int,
         day as c_int,
         hour as c_int, 
         minute as c_int,
-        seconds as c_double))
+        seconds as c_double));
 }
 
-class datetime {
+struct datetime {
     let cref: *gdatetime::GDateTime;
     
     new(gdt: *gdatetime::GDateTime) {

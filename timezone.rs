@@ -63,7 +63,7 @@ fn timezone_new_utc() -> timezone {
 // timezone is a structure that represents a time zone, at no particular
 // point in time. It owns a pointer to a GTimeZone that is refcounted and immutable.
 // full c docs @ http://developer.gnome.org/glib/2.31/glib-GTimeZone.html
-class timezone {
+struct timezone {
     let cref: *gdatetime::GTimeZone;
     
     new(tz: *gdatetime::GTimeZone) {
