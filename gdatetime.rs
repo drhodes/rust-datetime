@@ -15,9 +15,9 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
 // USA.
 
-import libc::*;
-import str::unsafe;
-import result::{result, ok, err};
+use libc::*;
+use str::raw;
+use result::{Result, Ok, Err};
 
 type GTimeSpan = i64;
 const G_TIME_SPAN_DAY: i64 = 86400000000;
@@ -32,9 +32,9 @@ type GDateMonth = u8;
 type GDateYear = u16;
 type GTime = i32;
 
-enum GDateTime{}
-enum GDate{}
-enum GTimeZone{}
+pub enum GDateTime{}
+pub enum GDate{}
+pub enum GTimeZone{}
 //enum GTimeVal{}
 type GTimeType = c_uint;
 
@@ -123,13 +123,13 @@ extern mod c {
     fn g_date_time_format (datetime: *GDateTime, format: *c_char) -> *c_char;
 }
 
-fn format_datetime(datetime: *GDateTime, format: ~str) -> result<~str, ~str> {
+pub fn format_datetime (datetime: *GDateTime, format: ~str) -> Result<~str, ~str> {
     let fmtd = str::as_c_str(format, {|x| c::g_date_time_format(datetime, x)});
     unsafe {
         if fmtd == ptr::null() {
-            err(~"bad format string: " + format)
+            Err(~"bad format string: " + format)
         } else {
-            ok(unsafe::from_c_str(fmtd))
+            Ok(raw::from_c_str(fmtd))
         }
     }    
 }

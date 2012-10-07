@@ -18,14 +18,14 @@
 // Copyright (C) 2009-2010 Christian Hergert <chris@dronelabs.com>
 // Altered to describe the calling convention of rust.
 
-use std;
-import libc::*;
-import str::unsafe;
-import result::{result, ok, err};
-import to_str;
+use libc::*;
+use str::raw;
+use result::{Result, Ok, Err};
+use to_str;
 
-import gdatetime::c;
-import timezone::timezone;
+use gdatetime;
+use gdatetime::c;
+use timezone::Timezone;
 
 // The timespan methods aren't included yet.  if anyone needs them
 // then please make an issue.  
@@ -36,7 +36,7 @@ import timezone::timezone;
 /// Creates a GDateTime corresponding to this exact instant in the
 /// given time zone tz. The time is as accurate as the system allows
 /// to a maximum accuracy of 1 microsecond.
-fn new_now(tz: timezone::timezone) -> datetime {
+fn new_now(tz: Timezone) -> datetime {
     return datetime(c::g_date_time_new_now(tz.cref));
 }
 
@@ -56,14 +56,14 @@ fn new_now_utc() -> datetime {
 /// elapsed since 1970-01-01 00:00:00 UTC, regardless of the local time offset.
 /// This call can fail (returns result::err) if t represents a time outside
 /// of the supported range of GDateTime.
-fn new_from_unix_local(t: i64) -> result<datetime, ~str> {
+fn new_from_unix_local(t: i64) -> Result<datetime, ~str> {
     let gdt = c::g_date_time_new_from_unix_local(t);
     if gdt == ptr::null() {
         let msg = ~"error in datetime::new_from_unix_local, \
                     time outside supported range: ";
-        return err(msg + i64::to_str(t, 10));
+        return Err(msg + i64::to_str(t, 10));
     } else {
-        return ok(datetime(gdt));
+        return Ok(datetime(gdt));
     }        
 }
 
@@ -71,15 +71,15 @@ fn new_from_unix_local(t: i64) -> result<datetime, ~str> {
 /// UTC. Unix time is the number of seconds that have elapsed since 
 /// 1970-01-01 00:00:00 UTC. This call can fail (returns result::err) if
 /// t represents a time outside of the supported range of GDateTime.
-fn new_from_unix_utc(t: i64) -> result<datetime, ~str> {
+fn new_from_unix_utc(t: i64) -> Result<datetime, ~str> {
     let gdt = c::g_date_time_new_from_unix_utc(t);
     //log(error, gdt.tv_sec);
     if gdt == ptr::null() {
         let msg = ~"error in datetime::new_from_unix_utc, \
                     time outside supported range: ";
-        err(msg + i64::to_str(t, 10))
+        Err(msg + i64::to_str(t, 10))
     } else {
-        ok(datetime(gdt))
+        Ok(datetime(gdt))
     }        
 }
 
@@ -89,14 +89,14 @@ fn new_from_unix_utc(t: i64) -> result<datetime, ~str> {
 // regardless of the local time offset. This call can fail
 // (returning result::err) if tv represents a time outside of the supported
 // range of GDateTime.
-// fn new_from_timeval_local(tv: *gdatetime::GTimeVal) -> result<datetime, ~str> {
+// fn new_from_timeval_local(tv: *gdatetime::GTimeVal) -> Result<datetime, ~str> {
 //     let gdt = c::g_date_time_new_from_timeval_local(tv);
 //     if gdt == ptr::null() {
 //         let msg = ~"error in datetime::new_from_timeval_local, \
 //                     time val outside supported range: ";
 //         err(msg + "TODO: string representation of GTimeVal")
 //     } else {
-//         ok(datetime(gdt))
+//         Ok(datetime(gdt))
 //     }        
 // }
 
@@ -106,7 +106,7 @@ fn new_from_unix_utc(t: i64) -> result<datetime, ~str> {
 
 /// Creates a new datetime corresponding to the given date and time 
 /// in the time zone tz
-fn new_datetime(tz: timezone, year: int, month: int, day: int, 
+fn new_datetime(tz: Timezone, year: int, month: int, day: int, 
                 hour: int, minute: int, seconds: f32) -> datetime{
     return datetime(c::g_date_time_new(
         tz.cref, 
@@ -132,7 +132,7 @@ fn new_datetime_local(year: int, month: int, day: int,
 
 /// Creates a new datetime corresponding to the given date and time in UTC.
 fn new_datetime_utc(year: int, month: int, day: int, 
-                hour: int, minute: int, seconds: f32) -> datetime{
+                    hour: int, minute: int, seconds: f32) -> datetime{
     return datetime(c::g_date_time_new_utc(
         year as c_int, 
         month as c_int,
@@ -143,96 +143,98 @@ fn new_datetime_utc(year: int, month: int, day: int,
 }
 
 struct datetime {
-    let cref: *gdatetime::GDateTime;
-    
-    new(gdt: *gdatetime::GDateTime) {
-        self.cref = gdt;
-    }
+    cref: *gdatetime::GDateTime,
 
     drop {
         c::g_date_time_unref(self.cref);        
     }
+}    
 
+fn datetime(gdt: *gdatetime::GDateTime) -> datetime {
+    return datetime{cref: gdt};
+}
+
+impl datetime { 
     /// Clone this datetime
     /// Replace this with copy constructor later.
-    fn clone() -> datetime {
+    fn clone() -> datetime {        
         c::g_date_time_ref(self.cref);        
-        datetime(self.cref)
+        return datetime(self.cref);
     }
-
+    
     /// Creates a copy of datetime adding the specified number of seconds.
     fn add_seconds(seconds: f64) -> datetime {
         let dt = c::g_date_time_add_seconds(self.cref, seconds as c_double);
-        datetime(dt)            
+        return datetime(dt);
     }
     
     /// Creates a copy of datetime adding the specified number of minutes.
     fn add_minutes(minutes: int) -> datetime {
         let dt = c::g_date_time_add_minutes(self.cref, minutes as c_int);
-        datetime(dt)
+        return datetime(dt);
     }
-
+    
     /// Creates a copy of datetime adding the specified number of days.
     fn add_days(days: int) -> datetime {
         let dt = c::g_date_time_add_days(self.cref, days as c_int);
-        datetime(dt)            
+        return datetime(dt);
     }
-
+    
     /// Creates a copy of datetime adding the specified number of months.
     fn add_months(months: int) -> datetime {
         let dt = c::g_date_time_add_months(self.cref, months as c_int);
-        datetime(dt)            
+        return datetime(dt);
     }
 
     /// Creates a copy of datetime adding the specified number of weeks.
     fn add_weeks(weeks: int) -> datetime {
         let dt = c::g_date_time_add_weeks(self.cref, weeks as c_int);
-        datetime(dt)            
+        return datetime(dt);
     }
 
     /// Creates a copy of datetime adding the specified number of years.
     fn add_years(years: int) -> datetime {
         let dt = c::g_date_time_add_years(self.cref, years as c_int);
-        datetime(dt)            
+        return datetime(dt);
     }
-
+    
     // fn add (timespan: GTimeSpan ){
     // }  
-
+    
     /// Create a copy of datetime while adding any or all of the following 
     /// units of time: years, months, days, hours, minutes, seconds.
     fn add_full(years: int, months: int, days: int, hours: int,
-                minutes: int, seconds: f64) -> result<datetime, ~str> {        
+                minutes: int, seconds: f64) -> Result<datetime, ~str> {        
         let gdt = c::g_date_time_add_full(self.cref, years as c_int, months as c_int, 
                                           days as c_int, hours as c_int, 
                                           minutes as c_int, seconds as c_double);
         if gdt == ptr::null() {
             let msg = ~"error in datetime::add_full, \
                         found value outside of supported range: ";
-            err(msg)
+            return Err(msg);
         } else {
-            ok(datetime(gdt))
+            return Ok(datetime(gdt));
         }        
     }    
-
+    
     //fn int g_date_time_compare (gconstpointer dt1, // gconstpointer dt2);
     // GTimeSpan g_date_time_difference (GDateTime *end, // GDateTime *begin);
 
     /// Hashes datetime into a uint
     fn hash() -> uint { 
-        c::g_date_time_hash(self.cref) as uint
+        return c::g_date_time_hash(self.cref) as uint;
     }
 
     /// Test for equality
     fn equal(other: datetime) -> bool {
-        c::g_date_time_equal(self.cref, other.cref) as bool
+        return c::g_date_time_equal(self.cref, other.cref) as bool;
     }
-
+    
     /// Retrieves the year represented by datetime in the Gregorian calendar.    
     fn get_year() -> int {
-        c::g_date_time_get_year(self.cref) as int
+        return c::g_date_time_get_year(self.cref) as int;
     }
-
+    
     /// Retrieves the month of the year represented by datetime in the Gregorian calendar.
     fn get_month() -> int {
         c::g_date_time_get_month(self.cref) as int 
@@ -313,7 +315,7 @@ struct datetime {
     /// and in the time zone of datetime.
     unsafe fn get_timezone_abbreviation () -> ~str {
         let cstr = c::g_date_time_get_timezone_abbreviation(self.cref);
-        unsafe::from_c_str(cstr)
+        raw::from_c_str(cstr)
     }
 
     /// Determines if daylight savings time is in effect at the time
@@ -324,7 +326,7 @@ struct datetime {
 
     /// Create a new GDateTime corresponding to the same instant in time
     /// as datetime, but in the time zone tz.
-    fn to_timezone(tz: timezone) -> datetime {
+    fn to_timezone(tz: Timezone) -> datetime {
         datetime(c::g_date_time_to_timezone(self.cref, tz.cref))
     }
 
@@ -337,11 +339,11 @@ struct datetime {
     /// Creates a new datetime corresponding to the same instant in
     /// time as datetime, but in UTC.
     fn to_utc() -> datetime {
-        datetime(c::g_date_time_to_utc (self.cref))
+        return datetime(c::g_date_time_to_utc (self.cref));
     }
 
     /// Creates a newly allocated string representing the requested format.
-    fn format(format: ~str) -> result<~str, ~str> {
+    fn format(format: ~str) -> Result<~str, ~str> {
         gdatetime::format_datetime(self.cref, format)
     }
 }

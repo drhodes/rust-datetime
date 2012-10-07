@@ -1,23 +1,27 @@
-#[link(
-    name = "datetime",
-    vers = "0.01",
-    uuid = "d056bd5e-d1da-11e1-af5e-5f7a5e87bb2e"
-)];
+#[link(name = "datetime",
+       vers = "0.01",
+       uuid = "d056bd5e-d1da-11e1-af5e-5f7a5e87bb2e")];
 
 #[crate_type = "lib"];
 
-#[path = "./datetime.rs"]
-mod datetime;
+extern mod std(vers = "0.4");
+extern mod rustc(vers = "0.4");
+extern mod syntax(vers = "0.4");
 
-#[path = "./timezone.rs"]
-mod timezone;
+use core::*;
 
 #[path = "./gdatetime.rs"]
 mod gdatetime;
 
+#[path = "./timezone.rs"]
+mod timezone;
+
+#[path = "./datetime.rs"]
+mod datetime;
 
 #[path = "tests/date_test.rs"]
 mod test1;
 
 #[path = "tests/api_test.rs"]
 mod test2;
+

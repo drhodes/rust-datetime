@@ -18,14 +18,15 @@
 // Function comments are copyrighted by 
 // Copyright © 2010 Codethink Limited
 // Author: Ryan Lortie <desrt@desrt.ca>
-// Altered to suit the calling convention of rust.
+// The comments have been altered to suit Rust's type system.
 
-use std;
-import libc::*;
-import str::unsafe;
-import result::{result, ok, err};
+use libc::*;
+use str::raw;
+use result::{Result, Ok, Err};
 
-import gdatetime::c;
+// use gdatetime::c;
+// use gdatetime;
+
 // -------------------------------------------------------
 // TimeZone
 
@@ -38,48 +39,51 @@ enum timetype {
 // Constructors
 // Create a new instance of timezone can either be an RFC3339/ISO 8601 time offset 
 // something that would pass as a valid value for the TZ environment variable (including NULL)
-fn timezone_new(id: ~str) -> result<timezone, ~str> {
+fn TimezoneNew(id: ~str) -> Result<Timezone, ~str> {
     let tz = str::as_c_str(id, c::g_time_zone_new);
     if tz == ptr::null() {
-        ok(timezone(tz))
+        Ok(Timezone(tz))
     } else {
-        err(~"Received invalid timezone string: " + id)
+        Err(~"Received invalid timezone string: " + id)
     }
 }
 
 // Creates a datetime corresponding to local time. The local 
 // timee zone may change between invocations to this function; 
 // for example, if the system administrator changes it.
-fn timezone_new_local() -> timezone {
-    timezone(c::g_time_zone_new_local())
+fn TimezoneNewLocal() -> Timezone {
+    Timezone(c::g_time_zone_new_local())
 }
 
 // Creates a timezone corresponding to UTC. This is equivalent 
 // calling timezone_new() with a value like `Z`, `UTC`, `+00`, etc."]
-fn timezone_new_utc() -> timezone {
-    timezone(c::g_time_zone_new_utc())
+fn TimezoneNewUtc() -> Timezone {
+    Timezone(c::g_time_zone_new_utc())
 }
 
 // timezone is a structure that represents a time zone, at no particular
 // point in time. It owns a pointer to a GTimeZone that is refcounted and immutable.
 // full c docs @ http://developer.gnome.org/glib/2.31/glib-GTimeZone.html
-struct timezone {
-    let cref: *gdatetime::GTimeZone;
-    
-    new(tz: *gdatetime::GTimeZone) {
-        self.cref = tz;
-    }
+struct Timezone {
+    cref: *gdatetime::GTimeZone,
+
     drop {
         c::g_time_zone_unref(self.cref);
     }
+}
+    
+fn Timezone(tz: *gdatetime::GTimeZone) -> Timezone {
+    Timezone(tz)
+}
 
+impl Timezone {
     /// Clone this timezone
     /// Replace this with copy constructor later.
-    fn clone() -> timezone {
+    fn clone() -> Timezone {
         c::g_time_zone_ref(self.cref);        
-        timezone(self.cref)
+        Timezone(self.cref)
     }
-    
+
     // Finds an the interval within tz that corresponds to the 
     // given time. The meaning of time depends on timetype 
     // If timetype is Universal then this function will 
@@ -101,9 +105,9 @@ struct timezone {
     //  months when daylight savings time is in effect."]
     unsafe fn get_abbreviation (interval: int) -> ~str {
         let carr = c::g_time_zone_get_abbreviation(self.cref, interval as c_int);
-        unsafe::from_c_str(carr)
+        raw::from_c_str(carr)
     }
-    
+
     // "Determines the offset to UTC in effect during a particular interval
     //  of time in the time zone tz. The offset is the number of seconds that
     //  you add to UTC time to arrive at local time for tz (ie: negative
@@ -118,5 +122,4 @@ struct timezone {
         c::g_time_zone_is_dst (self.cref, interval as c_int) as bool
     }
 }
-
 
