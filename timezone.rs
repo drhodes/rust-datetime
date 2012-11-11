@@ -26,7 +26,6 @@ use result::{Result, Ok, Err};
 
 // use gdatetime::c;
 // use gdatetime;
-
 // -------------------------------------------------------
 // TimeZone
 
